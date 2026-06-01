@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عداد استهلاك الإنترنت</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .usage-box {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .total-usage {
+            font-size: 48px;
+            font-weight: bold;
+        }
+        .unit {
+            font-size: 18px;
+            opacity: 0.8;
+        }
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .detail-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        .detail-value {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .reset-btn {
+            background: #f44336;
+        }
+        .warning {
+            background: #ff9800;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 عداد استهلاك الإنترنت</h1>
+        </div>
+        
+        <div class="usage-box">
+            <div class="total-usage" id="total">0.00</div>
+            <div class="unit" id="unit">MB</div>
+        </div>
+        
+        <div class="details">
+            <div class="detail-card">
+                <div>📤 تحميل</div>
+                <div class="detail-value" id="upload">0.00</div>
+                <div>MB</div>
+            </div>
+            <div class="detail-card">
+                <div>📥 تنزيل</div>
+                <div class="detail-value" id="download">0.00</div>
+                <div>MB</div>
+            </div>
+        </div>
+        
+        <button onclick="startMonitoring()" id="startBtn">▶️ بدء القياس</button>
+        <button onclick="resetCounter()" class="reset-btn">🔄 تصفير العداد</button>
+        
+        <div class="warning" id="warning" style="display: none;">
+            ⚠️ تجاوزت 100 MB!
+        </div>
+    </div>
+
+    <script>
+        let totalUsage = 0;
+        let uploadUsage = 0;
+        let downloadUsage = 0;
+        let isMonitoring = false;
+        let lastTimestamp = null;
+        
+        // محاكاة استهلاك عشوائي للانترنت
+        function simulateUsage() {
+            if (!isMonitoring) return;
+            
+            // زيادة عشوائية في الاستهلاك
+            const uploadIncrease = Math.random() * 0.5;
+            const downloadIncrease = Math.random() * 2;
+            
+            uploadUsage += uploadIncrease;
+            downloadUsage += downloadIncrease;
+            totalUsage = uploadUsage + downloadUsage;
+            
+            // تحديث العرض
+            updateDisplay();
+            
+            // التحقق من التنبيهات
+            checkWarnings();
+        }
+        
+        function updateDisplay() {
+            // عرض الإجمالي مع التحويل للـ GB اذا لزم
+            if (totalUsage > 1024) {
+                document.getElementById('total').textContent = (totalUsage / 1024).toFixed(2);
+                document.getElementById('unit').textContent = 'GB';
+            } else {
+                document.getElementById('total').textContent = totalUsage.toFixed(2);
+                document.getElementById('unit').textContent = 'MB';
+            }
+            
+            document.getElementById('upload').textContent = uploadUsage.toFixed(2);
+            document.getElementById('download').textContent = downloadUsage.toFixed(2);
+        }
+        
+        function checkWarnings() {
+            const warning = document.getElementById('warning');
+            if (totalUsage > 100) {
+                warning.style.display = 'block';
+            } else {
+                warning.style.display = 'none';
+            }
+        }
+        
+        function startMonitoring() {
+            isMonitoring = !isMonitoring;
+            const btn = document.getElementById('startBtn');
+            
+            if (isMonitoring) {
+                btn.textContent = '⏸️ ايقاف القياس';
+                btn.style.background = '#ff9800';
+                // بدء المحاكاة
+                if (!window.interval) {
+                    window.interval = setInterval(simulateUsage, 3000);
+                }
+            } else {
+                btn.textContent = '▶️ بدء القياس';
+                btn.style.background = '#4CAF50';
+                clearInterval(window.interval);
+                window.interval = null;
+            }
+        }
+        
+        function resetCounter() {
+            totalUsage = 0;
+            uploadUsage = 0;
+            downloadUsage = 0;
+            updateDisplay();
+            checkWarnings();
+        }
+        
+        // طلب الإذن لاستخدام بيانات الشبكة (اذا كان المتصفح يدعم)
+        if ('connection' in navigator) {
+            const connection = navigator.connection;
+            if (connection) {
+                console.log('نوع الاتصال:', connection.effectiveType);
+            }
+        }
+    </script>
+</body>
+</html>
